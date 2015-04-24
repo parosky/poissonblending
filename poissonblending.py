@@ -6,6 +6,18 @@ import scipy.sparse
 import PIL.Image
 import pyamg
 
+# pre-process the mask array so that uint64 types from opencv.imread can be adapted
+def prepare_mask(mask):
+    if type(mask[0][0]) is np.ndarray:
+        result = np.ndarray((mask.shape[0], mask.shape[1]), dtype=np.uint8)
+        for i in range(mask.shape[0]):
+            for j in range(mask.shape[1]):
+                if sum(mask[i][j]) > 0:
+                    result[i][j] = 1
+                else:
+                    result[i][j] = 0
+        mask = result
+    return mask
 
 def blend(img_target, img_source, img_mask, offset=(0, 0)):
     # compute regions to be blended
@@ -23,6 +35,7 @@ def blend(img_target, img_source, img_mask, offset=(0, 0)):
 
     # clip and normalize mask image
     img_mask = img_mask[region_source[0]:region_source[2], region_source[1]:region_source[3]]
+    img_mask = prepare_mask(img_mask)
     img_mask[img_mask==0] = False
     img_mask[img_mask!=False] = True
 
